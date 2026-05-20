@@ -1,10 +1,36 @@
 # WFDViM
 
-This repository provides the official implementation of **WFDViM: Wavelet Frequency Decoupling Vision Mamba with Wavelet-Guided Attention for Medical Image Segmentation**.
+This is the official code repository for **"WFDViM: Wavelet Frequency Decoupling Vision Mamba for Weak-Boundary Medical Image Segmentation"**.
 
-WFDViM is a frequency-aware hybrid Vision Mamba network for weak-boundary medical image segmentation. It uses wavelet frequency decoupling to separate low-frequency semantics and high-frequency details, applies learnable anisotropic diffusion to suppress noise in high-frequency components, and introduces wavelet-guided attention to progressively inject geometric priors into the decoder.
+## Abstract
 
-This release includes the core model implementation, the custom Spatial-Mamba CUDA kernels, and an ISIC training configuration.
+Convolution--Mamba hybrid architectures provide a new option for efficient long-range modeling in medical image segmentation. However, directly feeding full-frequency features into state space modules introduces redundant state propagation and fails to exploit Mamba's intrinsic preference for low-frequency global information modeling, making it difficult to stably recover lesion contours under weak-boundary and noise-interference scenarios. To address this issue, we propose WFDViM (Wavelet Frequency Decoupling Vision Mamba). In the encoding stage, the Wavelet Frequency Decoupling Block (WFDB) explicitly separates low-frequency semantics and high-frequency details through discrete wavelet transform, making low-frequency components more suitable for global modeling by Mamba, while high-frequency components are adaptively denoised by Learnable Anisotropic Diffusion (LAD), suppressing speckle noise, specular reflections, and texture noise while preserving true boundary structures. In the decoding stage, a lightweight Mask-Aware Decoding module (MAD) generates an initial regional mask, and the Wavelet-Guided Attention module (WGA) progressively injects the denoised high-frequency geometric priors into skip connections, thereby stably recovering weak-boundary contours. On four datasets, namely ISIC 2017, ISIC 2018, CVC-ClinicDB, and BUSI, WFDViM achieves DSC scores of 89.80%, 90.33%, 93.73%, and 85.20%, respectively, with only 13.06M parameters and 3.05 GFLOPs, demonstrating a favorable balance among segmentation accuracy, boundary recovery, and model efficiency.
+
+## Visual Results
+
+### Visual results on ISIC 2017
+
+<p align="center">
+  <img src="figures/isic2017_visualize.png" alt="Visual results on ISIC 2017" width="95%">
+</p>
+
+### Visual results on ISIC 2018
+
+<p align="center">
+  <img src="figures/isic2018_visualize.png" alt="Visual results on ISIC 2018" width="95%">
+</p>
+
+### Visual results on CVC-ClinicDB
+
+<p align="center">
+  <img src="figures/cvc_visualize.png" alt="Visual results on CVC-ClinicDB" width="95%">
+</p>
+
+### Visual results on BUSI
+
+<p align="center">
+  <img src="figures/busi_visualize.png" alt="Visual results on BUSI" width="95%">
+</p>
 
 ## 0. Main Environments
 
@@ -61,7 +87,7 @@ data_path = "/path/to/ISIC/"
 
 ### CVC-ClinicDB
 
-CVC-ClinicDB is a colonoscopy polyp segmentation dataset released by the Polytechnic University of Catalonia. It contains 612 clinically acquired images with pixel-level annotations and is commonly used to evaluate polyp segmentation under blurred boundaries, irregular shapes, specular highlights, and complex backgrounds.
+CVC-ClinicDB is a colonoscopy polyp segmentation dataset released by the Polytechnic University of Catalonia. It contains 612 clinically acquired images with pixel-level annotations. The images are collected from real endoscopic procedures and present high structural complexity and visual noise. Due to the blurred boundaries, irregular shapes, and large-scale variations of polyps, this dataset is often used to evaluate segmentation under complex background conditions.
 
 The dataset can be organized as:
 
@@ -77,7 +103,7 @@ The dataset can be organized as:
 
 ### BUSI
 
-The Breast Ultrasound Images dataset contains breast ultrasound images from normal, benign, and malignant categories. Following common practice for lesion segmentation, benign and malignant samples with lesion masks can be used and split into training and validation sets.
+The Breast Ultrasound Images (BUSI) dataset contains breast ultrasound images collected from women aged 25--75. It provides image-mask pairs across normal, benign, and malignant categories. Following common practice for lesion segmentation, benign and malignant samples with lesion masks can be used and split into training and validation sets.
 
 The dataset can be organized as:
 
@@ -91,30 +117,7 @@ The dataset can be organized as:
     masks/
 ```
 
-## 2. Model Configuration
-
-The released configuration follows a TinyViM Base-style encoder setting and uses an asymmetric decoder for medical image segmentation.
-
-| Item | Setting |
-| --- | --- |
-| Input size | 256 x 256 |
-| Number of classes | 1 |
-| Encoder embed dims | [48, 96, 192, 384] |
-| Encoder depths | [4, 3, 10, 5] |
-| Decoder dims | [384, 192, 96, 48] |
-| Decoder depths | [5, 10, 3, 4] |
-| Optimizer | AdamW |
-| Learning rate | 1e-3 |
-| Batch size | 32 |
-| Epochs | 300 |
-
-The full configuration is available in:
-
-```text
-config/tiny_config_isic.py
-```
-
-## 3. Train WFDViM
+## 2. Train WFDViM
 
 Run the training script from the repository root:
 
@@ -134,7 +137,7 @@ The best model checkpoint is saved as:
 results/WFDViM_isic_xxxxx/checkpoints/best_model.pth
 ```
 
-## 4. Main Files
+## 3. Main Files
 
 ```text
 config/tiny_config_isic.py    ISIC training configuration
@@ -147,19 +150,10 @@ engine.py                     Training and validation loops
 utils.py                      Losses, logging, and utilities
 ```
 
-## 5. Citation
+## 4. Citation
 
-If you find this work useful, please consider citing our paper. The citation information will be updated after publication.
+The paper is currently under submission. Citation information will be updated after publication.
 
-```bibtex
-@article{wfdvim,
-  title={WFDViM: Wavelet Frequency Decoupling Vision Mamba with Wavelet-Guided Attention for Medical Image Segmentation},
-  author={},
-  journal={},
-  year={2026}
-}
-```
-
-## 6. Acknowledgments
+## 5. Acknowledgments
 
 We thank the authors of [VM-UNet](https://github.com/JCruan519/VM-UNet), [TinyViM](https://github.com/xwmaxwma/TinyViM), [Spatial-Mamba](https://github.com/EdwardChasel/Spatial-Mamba), [VMamba](https://github.com/MzeroMiko/VMamba), and [Swin-UNet](https://github.com/HuCaoFighting/Swin-Unet) for their open-source codes.

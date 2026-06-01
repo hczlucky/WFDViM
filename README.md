@@ -1,10 +1,10 @@
 # WFDViM
 
-This is the official code repository for **"WFDViM: Wavelet Frequency Decoupling Vision Mamba for Weak-Boundary Medical Image Segmentation"**.
+This is the official code repository for **"WFDViM: Wavelet Frequency-Decoupled Vision Mamba for Robust Weak-Boundary Medical Image Segmentation"**.
 
 ## Abstract
 
-Convolution--Mamba hybrid architectures provide a new option for efficient long-range modeling in medical image segmentation. However, directly feeding full-frequency features into state space modules introduces redundant state propagation and fails to exploit Mamba's intrinsic preference for low-frequency global information modeling, making it difficult to stably recover lesion contours under weak-boundary and noise-interference scenarios. To address this issue, we propose WFDViM (Wavelet Frequency Decoupling Vision Mamba). In the encoding stage, the Wavelet Frequency Decoupling Block (WFDB) explicitly separates low-frequency semantics and high-frequency details through discrete wavelet transform, making low-frequency components more suitable for global modeling by Mamba, while high-frequency components are adaptively denoised by Learnable Anisotropic Diffusion (LAD), suppressing speckle noise, specular reflections, and texture noise while preserving true boundary structures. In the decoding stage, a lightweight Mask-Aware Decoding module (MAD) generates an initial regional mask, and the Wavelet-Guided Attention module (WGA) progressively injects the denoised high-frequency geometric priors into skip connections, thereby stably recovering weak-boundary contours. On four datasets, namely ISIC 2017, ISIC 2018, CVC-ClinicDB, and BUSI, WFDViM achieves DSC scores of 89.80%, 90.33%, 93.73%, and 85.20%, respectively, with only 13.06M parameters and 3.05 GFLOPs, demonstrating a favorable balance among segmentation accuracy, boundary recovery, and model efficiency.
+Automatic medical image segmentation remains challenging when lesions or anatomical targets exhibit weak boundaries, low contrast, heterogeneous morphology, and strong noise interference. Existing convolutional, Transformer-based, and state-space segmentation networks have improved global representation learning, but many of them process mixed-frequency features uniformly, which may introduce redundant long-range propagation and weaken the recovery of fine boundary structures. This study presents WFDViM, a wavelet frequency-decoupled Vision Mamba framework for robust weak-boundary medical image segmentation. The encoder explicitly separates low-frequency semantic information and high-frequency structural details through discrete wavelet decomposition. Low-frequency components are assigned to structure-aware state-space modeling to capture global context while preserving two-dimensional spatial consistency, whereas high-frequency components are refined by a learnable anisotropic diffusion mechanism to suppress speckle noise, specular reflections, and texture disturbances while retaining meaningful contour cues. In the decoder, a lightweight mask-aware prior and wavelet-guided attention module use denoising-constrained high-frequency geometric information to calibrate skip-connection features during multi-scale upsampling. Experiments are conducted on four public datasets covering dermoscopy, endoscopy, and ultrasound images, including ISIC 2017, ISIC 2018, CVC-ClinicDB, and BUSI. WFDViM achieves Dice scores of 89.80%, 90.33%, 93.73%, and 85.20%, respectively, with 13.06M parameters and 3.05 GFLOPs.
 
 ## Visual Results
 
@@ -32,7 +32,7 @@ Convolution--Mamba hybrid architectures provide a new option for efficient long-
   <img src="figures/busi_visualize.png" alt="Visual results on BUSI" width="95%">
 </p>
 
-## 0. Main Environments
+## Environment Setup
 
 Create and activate a conda environment:
 
@@ -47,7 +47,7 @@ Install the Python dependencies:
 pip install -r requirements.txt
 ```
 
-Install the custom CUDA kernels:
+Install the custom CUDA kernels from the repository root:
 
 ```bash
 cd kernels/selective_scan
@@ -57,13 +57,13 @@ cd ../dwconv2d
 python3 setup.py install --user
 ```
 
-## 1. Prepare the Dataset
+## Dataset Preparation
 
-The current release provides the training configuration for ISIC. CVC-ClinicDB and BUSI can be organized with the same image-mask folder format if users extend the configuration for these datasets.
+The current release provides an ISIC training configuration. CVC-ClinicDB and BUSI can be organized with the same image-mask folder format if users extend the dataset configuration.
 
 ### ISIC datasets
 
-The ISIC 2017 and ISIC 2018 datasets can be downloaded from the [ISIC Challenge data page](https://challenge.isic-archive.com/data/). After downloading the dataset, organize the files as follows:
+The ISIC 2017 and ISIC 2018 datasets can be downloaded from the [ISIC Challenge data page](https://challenge.isic-archive.com/data/). After downloading a dataset, organize the files as follows:
 
 ```text
 /path/to/ISIC/
@@ -87,9 +87,7 @@ data_path = "/path/to/ISIC/"
 
 ### CVC-ClinicDB
 
-CVC-ClinicDB is a colonoscopy polyp segmentation dataset released by the Polytechnic University of Catalonia. It contains 612 clinically acquired images with pixel-level annotations. The images are collected from real endoscopic procedures and present high structural complexity and visual noise. Due to the blurred boundaries, irregular shapes, and large-scale variations of polyps, this dataset is often used to evaluate segmentation under complex background conditions.
-
-The dataset can be organized as:
+CVC-ClinicDB is a colonoscopy polyp segmentation dataset released by the Polytechnic University of Catalonia. It can be organized as:
 
 ```text
 /path/to/CVC-ClinicDB/
@@ -103,9 +101,7 @@ The dataset can be organized as:
 
 ### BUSI
 
-The Breast Ultrasound Images (BUSI) dataset contains breast ultrasound images collected from women aged 25--75. It provides image-mask pairs across normal, benign, and malignant categories. Following common practice for lesion segmentation, benign and malignant samples with lesion masks can be used and split into training and validation sets.
-
-The dataset can be organized as:
+The Breast Ultrasound Images (BUSI) dataset provides ultrasound image-mask pairs for breast lesion segmentation. Benign and malignant samples with lesion masks can be organized as:
 
 ```text
 /path/to/BUSI/
@@ -117,7 +113,7 @@ The dataset can be organized as:
     masks/
 ```
 
-## 2. Train WFDViM
+## Training
 
 Run the training script from the repository root:
 
@@ -137,23 +133,23 @@ The best model checkpoint is saved as:
 results/WFDViM_isic_xxxxx/checkpoints/best_model.pth
 ```
 
-## 3. Main Files
+## Main Files
 
 ```text
 config/tiny_config_isic.py    ISIC training configuration
 datasets/dataset.py           Dataset loading and basic transforms
 models/wfdvim/                WFDViM model implementation
-models/wavelet/               Wavelet frequency decoupling modules
+models/wavelet/               Wavelet transform and frequency decoupling modules
 kernels/                      Custom CUDA kernels
 tiny_train_isic.py            Training entry
 engine.py                     Training and validation loops
 utils.py                      Losses, logging, and utilities
 ```
 
-## 4. Citation
+## Citation
 
 The paper is currently under submission. Citation information will be updated after publication.
 
-## 5. Acknowledgments
+## Acknowledgments
 
-We thank the authors of [VM-UNet](https://github.com/JCruan519/VM-UNet), [TinyViM](https://github.com/xwmaxwma/TinyViM), [Spatial-Mamba](https://github.com/EdwardChasel/Spatial-Mamba), [VMamba](https://github.com/MzeroMiko/VMamba), and [Swin-UNet](https://github.com/HuCaoFighting/Swin-Unet) for their open-source codes.
+This repository is built upon and inspired by several excellent open-source projects, including [VM-UNet](https://github.com/JCruan519/VM-UNet), [TinyViM](https://github.com/xwmaxwma/TinyViM), [Spatial-Mamba](https://github.com/EdwardChasel/Spatial-Mamba), [VMamba](https://github.com/MzeroMiko/VMamba), and [Swin-UNet](https://github.com/HuCaoFighting/Swin-Unet). We thank the authors for their public implementations.

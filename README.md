@@ -1,49 +1,18 @@
 # WFDViM
 
-This is the official code repository for **"WFDViM: Wavelet Frequency-Decoupled Vision Mamba for Robust Weak-Boundary Medical Image Segmentation"**.
+This is the official PyTorch implementation of **"WFDViM: Wavelet Frequency-Decoupled Vision Mamba for Robust Weak-Boundary Medical Image Segmentation"**.
 
 ## Abstract
 
-Automatic medical image segmentation remains challenging when lesions or anatomical targets exhibit weak boundaries, low contrast, heterogeneous morphology, and strong noise interference. Existing convolutional, Transformer-based, and state-space segmentation networks have improved global representation learning, but many of them process mixed-frequency features uniformly, which may introduce redundant long-range propagation and weaken the recovery of fine boundary structures. This study presents WFDViM, a wavelet frequency-decoupled Vision Mamba framework for robust weak-boundary medical image segmentation. The encoder explicitly separates low-frequency semantic information and high-frequency structural details through discrete wavelet decomposition. Low-frequency components are assigned to structure-aware state-space modeling to capture global context while preserving two-dimensional spatial consistency, whereas high-frequency components are refined by a learnable anisotropic diffusion mechanism to suppress speckle noise, specular reflections, and texture disturbances while retaining meaningful contour cues. In the decoder, a lightweight mask-aware prior and wavelet-guided attention module use denoising-constrained high-frequency geometric information to calibrate skip-connection features during multi-scale upsampling. Experiments are conducted on four public datasets covering dermoscopy, endoscopy, and ultrasound images, including ISIC 2017, ISIC 2018, CVC-ClinicDB, and BUSI. WFDViM achieves Dice scores of 89.80%, 90.33%, 93.73%, and 85.20%, respectively, with 13.06M parameters and 3.05 GFLOPs.
+WFDViM separates low-frequency semantics from high-frequency structures for weak-boundary medical image segmentation. Its encoder combines wavelet frequency decoupling, structure-aware state-space modeling, and learnable anisotropic diffusion, while the decoder uses multi-scale aggregation and wavelet-guided attention for progressive boundary refinement. Across three independent runs on ISIC 2017, ISIC 2018, CVC-ClinicDB, and BUSI, WFDViM achieves mean Dice scores of 89.82%, 90.36%, 93.66%, and 85.10%, respectively, with 13.06M parameters and 3.05 GFLOPs.
 
-## Visual Results
+## 0. Main Environments
 
-### Visual results on ISIC 2017
-
-<p align="center">
-  <img src="figures/isic2017_visualize.png" alt="Visual results on ISIC 2017" width="95%">
-</p>
-
-### Visual results on ISIC 2018
-
-<p align="center">
-  <img src="figures/isic2018_visualize.png" alt="Visual results on ISIC 2018" width="95%">
-</p>
-
-### Visual results on CVC-ClinicDB
-
-<p align="center">
-  <img src="figures/cvc_visualize.png" alt="Visual results on CVC-ClinicDB" width="95%">
-</p>
-
-### Visual results on BUSI
-
-<p align="center">
-  <img src="figures/busi_visualize.png" alt="Visual results on BUSI" width="95%">
-</p>
-
-## Environment Setup
-
-Create and activate a conda environment:
+Create and activate the environment, then install the dependencies:
 
 ```bash
 conda create -n wfdvim python=3.10
 conda activate wfdvim
-```
-
-Install the Python dependencies:
-
-```bash
 pip install -r requirements.txt
 ```
 
@@ -52,68 +21,83 @@ Install the custom CUDA kernels from the repository root:
 ```bash
 cd kernels/selective_scan
 pip install .
-
 cd ../dwconv2d
-python3 setup.py install --user
+python setup.py install --user
+cd ../..
 ```
 
-## Dataset Preparation
-
-The current release provides an ISIC training configuration. CVC-ClinicDB and BUSI can be organized with the same image-mask folder format if users extend the dataset configuration.
+## 1. Prepare the Datasets
 
 ### ISIC datasets
 
-The ISIC 2017 and ISIC 2018 datasets can be downloaded from the [ISIC Challenge data page](https://challenge.isic-archive.com/data/). After downloading a dataset, organize the files as follows:
+- [ISIC 2017 (Google Drive)](https://drive.google.com/file/d/1ZTOVI5Vp3KTQFDt5moJThJ_xYp2pKBAK/view?usp=sharing): 1,500 training and 650 test image-mask pairs.
+- [ISIC 2018 (Google Drive)](https://drive.google.com/file/d/1AOpPgSEAfgUS2w4rCGaJBbNYbRh3Z_FQ/view?usp=sharing): 1,886 training and 808 test image-mask pairs.
+
+Place the datasets in `./data/isic17/` and `./data/isic18/`. The `val` directory stores the fixed test split used by the current loader.
 
 ```text
-/path/to/ISIC/
-  train/
-    images/
-      xxx.png
-    masks/
-      xxx.png
-  val/
-    images/
-      xxx.png
-    masks/
-      xxx.png
+data/isic17/
+├── train/
+│   ├── images/
+│   │   └── *.png
+│   └── masks/
+│       └── *.png
+└── val/
+    ├── images/
+    │   └── *.png
+    └── masks/
+        └── *.png
 ```
 
-Then set the dataset path in `config/tiny_config_isic.py`:
+Use the same structure for `data/isic18/`.
+
+### CVC-ClinicDB
+
+- [Training dataset (Google Drive)](https://drive.google.com/file/d/1YiGHLw4iTvKdvbT6MgwO9zcCv8zJ_Bnb/view?usp=sharing): use the CVC-ClinicDB subset containing 550 training images.
+- [Testing dataset (Google Drive)](https://drive.google.com/file/d/1Y2z7FD5p5y31vkZwQQomXFRB0HutHyao/view?usp=sharing): use the CVC-ClinicDB subset containing 62 test images.
+
+The linked PraNet packages also contain other polyp datasets; only extract the CVC-ClinicDB image-mask pairs for this split.
+
+```text
+data/CVC_ClinicDB/
+├── train/
+│   ├── images/
+│   │   └── *.png
+│   └── masks/
+│       └── *.png
+└── val/
+    ├── images/
+    │   └── *.png
+    └── masks/
+        └── *.png
+```
+
+### BUSI
+
+Download BUSI from [Kaggle](https://www.kaggle.com/aryashah2k/breast-ultrasound-images-dataset). The dataset contains 780 images; the reported experiments use the 647 benign and malignant cases, with a fixed split of 517 training and 130 test images. Normal cases are not used because they contain no lesion regions.
+
+```text
+inputs/BUSI/
+├── images/
+│   └── *.png
+└── masks/
+    └── 0/
+        └── *.png
+```
+
+For binary segmentation, use mask folder `0`.
+
+## 2. Configure the Dataset Path
+
+Set `data_path` in `config/tiny_config_isic.py`:
 
 ```python
 data_path = "/path/to/ISIC/"
 ```
 
-### CVC-ClinicDB
+The current release provides the ISIC training configuration. The CVC-ClinicDB and BUSI links above document the fixed datasets used in the paper.
 
-CVC-ClinicDB is a colonoscopy polyp segmentation dataset released by the Polytechnic University of Catalonia. It can be organized as:
-
-```text
-/path/to/CVC-ClinicDB/
-  train/
-    images/
-    masks/
-  val/
-    images/
-    masks/
-```
-
-### BUSI
-
-The Breast Ultrasound Images (BUSI) dataset provides ultrasound image-mask pairs for breast lesion segmentation. Benign and malignant samples with lesion masks can be organized as:
-
-```text
-/path/to/BUSI/
-  train/
-    images/
-    masks/
-  val/
-    images/
-    masks/
-```
-
-## Training
+## 3. Train WFDViM
 
 Run the training script from the repository root:
 
@@ -121,35 +105,35 @@ Run the training script from the repository root:
 python tiny_train_isic.py
 ```
 
-Training logs, checkpoints, and outputs are saved under:
+Training outputs are saved under `results/`.
+
+## 4. Weak-Boundary Robustness Protocol
+
+`robustness/busi_weak_boundary.py` provides the model-independent BUSI protocol used in the paper:
+
+- It applies a `bior2.2` DWT to each resized RGB channel, retains the low-frequency subband, injects deterministic Gaussian fields into the three high-frequency subbands, and scales the reconstructed image to 25 dB PSNR after clipping.
+- It defines the weak-boundary subset using a normalized boundary-gradient score. The first quartile from the 517 training images is used as a fixed threshold; this selects 31 of the 130 test images in the reported split.
+
+The protocol uses only images and ground-truth masks. It contains no model weights, checkpoint paths, or prediction-dependent subset selection.
+
+## 5. Main Files
 
 ```text
-results/
+config/tiny_config_isic.py       ISIC training configuration
+datasets/dataset.py              Dataset loading and transforms
+models/wfdvim/                   WFDViM implementation
+models/wavelet/                  Wavelet and frequency-decoupling modules
+robustness/busi_weak_boundary.py BUSI perturbation and subset protocol
+kernels/                         Custom CUDA kernels
+tiny_train_isic.py               Training entry
+engine.py                        Training and validation loops
+utils.py                         Losses and utilities
 ```
 
-The best model checkpoint is saved as:
-
-```text
-results/WFDViM_isic_xxxxx/checkpoints/best_model.pth
-```
-
-## Main Files
-
-```text
-config/tiny_config_isic.py    ISIC training configuration
-datasets/dataset.py           Dataset loading and basic transforms
-models/wfdvim/                WFDViM model implementation
-models/wavelet/               Wavelet transform and frequency decoupling modules
-kernels/                      Custom CUDA kernels
-tiny_train_isic.py            Training entry
-engine.py                     Training and validation loops
-utils.py                      Losses, logging, and utilities
-```
-
-## Citation
+## 6. Citation
 
 The paper is currently under submission. Citation information will be updated after publication.
 
-## Acknowledgments
+## 7. Acknowledgments
 
-This repository is built upon and inspired by several excellent open-source projects, including [VM-UNet](https://github.com/JCruan519/VM-UNet), [TinyViM](https://github.com/xwmaxwma/TinyViM), [Spatial-Mamba](https://github.com/EdwardChasel/Spatial-Mamba), [VMamba](https://github.com/MzeroMiko/VMamba), and [Swin-UNet](https://github.com/HuCaoFighting/Swin-Unet). We thank the authors for their public implementations.
+This repository is built upon and inspired by [VM-UNet](https://github.com/JCruan519/VM-UNet), [TinyViM](https://github.com/xwmaxwma/TinyViM), [Spatial-Mamba](https://github.com/EdwardChasel/Spatial-Mamba), [VMamba](https://github.com/MzeroMiko/VMamba), and [Swin-UNet](https://github.com/HuCaoFighting/Swin-Unet). We thank the authors for their public implementations.

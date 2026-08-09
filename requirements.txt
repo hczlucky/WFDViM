@@ -15,3 +15,6 @@ seaborn
 opencv-python
 tensorboard
 Cython
+numpy
+scipy
+PyWavelets

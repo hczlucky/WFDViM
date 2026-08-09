@@ -33,6 +33,8 @@ cd ../..
 - [ISIC 2017 (Google Drive)](https://drive.google.com/file/d/1ZTOVI5Vp3KTQFDt5moJThJ_xYp2pKBAK/view?usp=sharing): 1,500 training and 650 test image-mask pairs.
 - [ISIC 2018 (Google Drive)](https://drive.google.com/file/d/1AOpPgSEAfgUS2w4rCGaJBbNYbRh3Z_FQ/view?usp=sharing): 1,886 training and 808 test image-mask pairs.
 
+Following [zymissy/CCViM](https://github.com/zymissy/CCViM), we use its 7:3 training/test split.
+
 Place the datasets in `./data/isic17/` and `./data/isic18/`. The `val` directory stores the fixed test split used by the current loader.
 
 ```text
@@ -52,6 +54,8 @@ data/isic17/
 Use the same structure for `data/isic18/`.
 
 ### CVC-ClinicDB
+
+Following [DengPingFan/PraNet](https://github.com/DengPingFan/PraNet/), we use its predefined dataset split:
 
 - [Training dataset (Google Drive)](https://drive.google.com/file/d/1YiGHLw4iTvKdvbT6MgwO9zcCv8zJ_Bnb/view?usp=sharing): use the CVC-ClinicDB subset containing 550 training images.
 - [Testing dataset (Google Drive)](https://drive.google.com/file/d/1Y2z7FD5p5y31vkZwQQomXFRB0HutHyao/view?usp=sharing): use the CVC-ClinicDB subset containing 62 test images.
@@ -74,7 +78,7 @@ data/CVC_ClinicDB/
 
 ### BUSI
 
-Download BUSI from [Kaggle](https://www.kaggle.com/aryashah2k/breast-ultrasound-images-dataset). The dataset contains 780 images; the reported experiments use the 647 benign and malignant cases, with a fixed split of 517 training and 130 test images. Normal cases are not used because they contain no lesion regions.
+Download BUSI from [Kaggle](https://www.kaggle.com/aryashah2k/breast-ultrasound-images-dataset) or the [original dataset page](https://scholar.cu.edu.eg/?q=afahmy/pages/dataset). Following [jeya-maria-jose/UNeXt-pytorch](https://github.com/jeya-maria-jose/UNeXt-pytorch/), we use the 647 benign and malignant cases with a fixed split of 517 training and 130 test images. Normal cases are not used because they contain no lesion regions.
 
 ```text
 inputs/BUSI/

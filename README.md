@@ -69,7 +69,7 @@ data/CVC_ClinicDB/
 │   │   └── *.png
 │   └── masks/
 │       └── *.png
-└── val/
+└── test/
     ├── images/
     │   └── *.png
     └── masks/
@@ -99,7 +99,7 @@ Set `data_path` in `config/tiny_config_isic.py`:
 data_path = "/path/to/ISIC/"
 ```
 
-The current release provides the ISIC training configuration. The CVC-ClinicDB and BUSI links above document the fixed datasets used in the paper.
+The current release provides the ISIC training configuration. The CVC-ClinicDB and BUSI sections above document the dataset sources and fixed splits used in the paper; dedicated training entry points for these two datasets are not included in the current release.
 
 ## 3. Train WFDViM
 

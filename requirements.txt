@@ -18,3 +18,4 @@ Cython
 numpy
 scipy
 PyWavelets
+Pillow>=9.1.0

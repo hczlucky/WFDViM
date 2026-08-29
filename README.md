@@ -136,7 +136,20 @@ utils.py                         Losses and utilities
 
 ## 6. Citation
 
-The paper is currently under submission. Citation information will be updated after publication.
+If you find this work useful, please cite:
+
+```bibtex
+@article{huang2026wfdvim,
+  title={WFDViM: wavelet frequency-decoupled vision Mamba for robust weak-boundary medical image segmentation},
+  author={Huang, Chuanzhong and Wu, Xiao and Tan, Xuan and Gou, Gang},
+  journal={Multimedia Systems},
+  volume={32},
+  number={8},
+  pages={538},
+  year={2026},
+  publisher={Springer}
+}
+```
 
 ## 7. Acknowledgments
 
